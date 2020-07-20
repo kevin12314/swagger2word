@@ -369,7 +369,7 @@ public class WordServiceImpl implements WordService {
                     for (ModelAttr subModelAttr : modelAttr.getProperties()) {
                         responseMap.put(subModelAttr.getName(), getValue(subModelAttr.getType(), subModelAttr));
                     }
-                    return JsonUtils.writeJsonStr(responseMap);
+                    return JsonUtils.writeJsonStr(responseMap).replace("\n", "<br/>").replace(" ","&nbsp;");
                 }
             }
         }
@@ -418,11 +418,12 @@ public class WordServiceImpl implements WordService {
         if (!jsonMap.isEmpty()) {
             if (jsonMap.size() == 1) {
                 for (Entry<String, Object> entry : jsonMap.entrySet()) {
-                    res += " -d '" + JsonUtils.writeJsonStr(entry.getValue()) + "'";
+                    res += JsonUtils.writeJsonStr(entry.getValue());
                 }
             } else {
-                res += " -d '" + JsonUtils.writeJsonStr(jsonMap) + "'";
+                res += JsonUtils.writeJsonStr(jsonMap);
             }
+            res=res.replace("\n", "<br/>").replace(" ","&nbsp;");
         }
         return res;
     }
