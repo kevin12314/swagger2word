@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * @Author XiuYin.Cui
  * @Date 2018/1/12
  **/
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 @Slf4j
 @Service
 public class WordServiceImpl implements WordService {
@@ -38,7 +38,7 @@ public class WordServiceImpl implements WordService {
         Map<String, Object> resultMap = new HashMap<>();
         try {
             String jsonStr = restTemplate.getForObject(swaggerUrl, String.class);
-            resultMap=tableListFromString(jsonStr);
+            resultMap = tableListFromString(jsonStr);
             log.debug(JsonUtils.writeJsonStr(resultMap));
         } catch (Exception e) {
             log.error("parse error", e);
@@ -52,7 +52,8 @@ public class WordServiceImpl implements WordService {
         List<Table> result = new ArrayList<>();
         try {
             Map<String, Object> map = getResultFromString(result, jsonStr);
-            Map<String, List<Table>> tableMap = result.stream().parallel().collect(Collectors.groupingBy(Table::getTitle));
+            Map<String, List<Table>> tableMap = result.stream().parallel()
+                    .collect(Collectors.groupingBy(Table::getTitle));
             resultMap.put("tableMap", new TreeMap<>(tableMap));
             resultMap.put("info", map.get("info"));
 
@@ -69,7 +70,7 @@ public class WordServiceImpl implements WordService {
         List<Table> result = new ArrayList<>();
         try {
             String jsonStr = new String(jsonFile.getBytes());
-            resultMap=tableListFromString(jsonStr);
+            resultMap = tableListFromString(jsonStr);
             log.debug(JsonUtils.writeJsonStr(resultMap));
         } catch (Exception e) {
             log.error("parse error", e);
@@ -81,10 +82,10 @@ public class WordServiceImpl implements WordService {
         // convert JSON string to Map
         Map<String, Object> map = JsonUtils.readValue(jsonStr, HashMap.class);
 
-        //解析model
+        // 解析model
         Map<String, ModelAttr> definitinMap = parseDefinitions(map);
 
-        //解析paths
+        // 解析paths
         Map<String, Map<String, Object>> paths = (Map<String, Map<String, Object>>) map.get("paths");
         if (paths != null) {
             Iterator<Entry<String, Map<String, Object>>> it = paths.entrySet().iterator();
@@ -131,7 +132,7 @@ public class WordServiceImpl implements WordService {
                 // 10.返回体
                 Map<String, Object> responses = (LinkedHashMap) content.get("responses");
 
-                //封装Table
+                // 封装Table
                 Table table = new Table();
 
                 table.setTitle(title);
@@ -150,7 +151,7 @@ public class WordServiceImpl implements WordService {
                     table.setModelAttr(processResponseModelAttrs(obj, definitinMap));
                 }
 
-                //示例
+                // 示例
                 table.setRequestParam(processRequestParam(table.getRequestList()));
                 table.setResponseParam(processResponseParam(obj, definitinMap));
 
@@ -206,7 +207,6 @@ public class WordServiceImpl implements WordService {
         return requestList;
     }
 
-
     /**
      * 处理返回码列表
      *
@@ -244,19 +244,19 @@ public class WordServiceImpl implements WordService {
         Map<String, Object> schema = (Map<String, Object>) responseObj.get("schema");
         String type = (String) schema.get("type");
         String ref = null;
-        //数组
+        // 数组
         if ("array".equals(type)) {
             Map<String, Object> items = (Map<String, Object>) schema.get("items");
             if (items != null && items.get("$ref") != null) {
                 ref = (String) items.get("$ref");
             }
         }
-        //对象
+        // 对象
         if (schema.get("$ref") != null) {
             ref = (String) schema.get("$ref");
         }
 
-        //其他类型
+        // 其他类型
         ModelAttr modelAttr = new ModelAttr();
         modelAttr.setType(StringUtils.defaultIfBlank(type, StringUtils.EMPTY));
 
@@ -286,10 +286,10 @@ public class WordServiceImpl implements WordService {
     }
 
     /**
-     * 递归生成ModelAttr
-     * 对$ref类型设置具体属性
+     * 递归生成ModelAttr 对$ref类型设置具体属性
      */
-    private ModelAttr getAndPutModelAttr(Map<String, Map<String, Object>> swaggerMap, Map<String, ModelAttr> resMap, String modeName) {
+    private ModelAttr getAndPutModelAttr(Map<String, Map<String, Object>> swaggerMap, Map<String, ModelAttr> resMap,
+            String modeName) {
         ModelAttr modeAttr;
         if ((modeAttr = resMap.get("#/definitions/" + modeName)) == null) {
             modeAttr = new ModelAttr();
@@ -303,8 +303,10 @@ public class WordServiceImpl implements WordService {
         }
         Iterator<Entry<String, Object>> mIt = modeProperties.entrySet().iterator();
 
+        List<String> requireds = (List<String>) swaggerMap.get(modeName).get("required");
+
         List<ModelAttr> attrList = new ArrayList<>();
-        //解析属性
+        // 解析属性
         while (mIt.hasNext()) {
             Entry<String, Object> mEntry = mIt.next();
             Map<String, Object> attrInfoMap = (Map<String, Object>) mEntry.getValue();
@@ -320,7 +322,7 @@ public class WordServiceImpl implements WordService {
             Object items = attrInfoMap.get("items");
             if (ref != null || (items != null && (ref = ((Map) items).get("$ref")) != null)) {
                 String refName = ref.toString();
-                //截取 #/definitions/ 后面的
+                // 截取 #/definitions/ 后面的
                 String clsName = refName.substring(14);
                 modeAttr.setCompleted(true);
                 ModelAttr refModel = getAndPutModelAttr(swaggerMap, resMap, clsName);
@@ -329,6 +331,9 @@ public class WordServiceImpl implements WordService {
                 }
                 child.setType(child.getType() + ":" + clsName);
             }
+
+            if (requireds != null && requireds.stream().filter(p -> p.equals(child.getName())).count() > 0)
+                child.setRequire(true);
             child.setDescription((String) attrInfoMap.get("description"));
             attrList.add(child);
         }
@@ -346,7 +351,8 @@ public class WordServiceImpl implements WordService {
      * @param responseObj
      * @return
      */
-    private String processResponseParam(Map<String, Object> responseObj, Map<String, ModelAttr> definitinMap) throws JsonProcessingException {
+    private String processResponseParam(Map<String, Object> responseObj, Map<String, ModelAttr> definitinMap)
+            throws JsonProcessingException {
         if (responseObj != null && responseObj.get("schema") != null) {
             Map<String, Object> schema = (Map<String, Object>) responseObj.get("schema");
             String type = (String) schema.get("type");
@@ -369,7 +375,7 @@ public class WordServiceImpl implements WordService {
                     for (ModelAttr subModelAttr : modelAttr.getProperties()) {
                         responseMap.put(subModelAttr.getName(), getValue(subModelAttr.getType(), subModelAttr));
                     }
-                    return JsonUtils.writeJsonStr(responseMap).replace("\n", "<br/>").replace(" ","&nbsp;");
+                    return JsonUtils.writeJsonStr(responseMap).replace("\n", "<br/>").replace(" ", "&nbsp;");
                 }
             }
         }
@@ -399,7 +405,7 @@ public class WordServiceImpl implements WordService {
                         queryMap.put(name, value);
                         break;
                     case "body":
-                        //TODO 根据content-type序列化成不同格式，目前只用了json
+                        // TODO 根据content-type序列化成不同格式，目前只用了json
                         jsonMap.put(name, value);
                         break;
                     default:
@@ -423,7 +429,7 @@ public class WordServiceImpl implements WordService {
             } else {
                 res += JsonUtils.writeJsonStr(jsonMap);
             }
-            res=res.replace("\n", "<br/>").replace(" ","&nbsp;");
+            res = res.replace("\n", "<br/>").replace(" ", "&nbsp;");
         }
         return res;
     }
