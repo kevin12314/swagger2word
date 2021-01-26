@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="application/msword; charset=utf-8"/>
     <title>toWord</title>
-        <style type="text/css">
+    <style type="text/css">
         .bg {
             font-size: 14.5px;
             font-weight: bold;
@@ -78,7 +78,7 @@
 </head>
 
 <body>
-<div style="width:1000px; margin: 0 auto">
+<div style="width:800px; margin: 0 auto">
     <div>
         <p class="doc_title" th:text="${info.title +'（'+ info.version +'）'}"></p>
         <a class="download_btn" th:if="${download == 1}" th:href="${'/downloadWord?url='+ url}">下載文檔</a>
@@ -105,8 +105,8 @@
                     <td colspan="4" th:text="${table.url}"></td>
                 </tr>
                 <tr>
-                    <td>請求方式</td>
-                    <td colspan="4" th:text="${table.requestType}"></td>
+                    <td>请求方式</td>
+                    <td colspan="4" th:text="${#strings.toUpperCase(table.requestType)}"></td>
                 </tr>
                 <tr>
                     <td>請求類型</td>
@@ -159,7 +159,7 @@
                     <td colspan="2">說明</td>
                 </tr>
 
-<!--               對返回參數 遞迴生成行-->
+                <!--               对返回参数 递归生成行-->
                 <tbody th:include="this::response(${table.modelAttr.properties},'', 1)"/>
 
                 <tr class="bg">

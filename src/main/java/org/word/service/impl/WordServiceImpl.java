@@ -16,8 +16,14 @@ import org.word.service.WordService;
 import org.word.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -301,6 +307,7 @@ public class WordServiceImpl implements WordService {
                 request.setParamType(String.valueOf(in));
                 // 考虑对象参数类型
                 if (in != null && "body".equals(in)) {
+                    request.setType(String.valueOf(in));
                     Map<String, Object> schema = (Map) param.get("schema");
                     Object ref = schema.get("$ref");
                     // 数组情况另外处理
@@ -607,15 +614,15 @@ public class WordServiceImpl implements WordService {
      * 将map转换成url
      */
     public static String getUrlParamsByMap(Map<String, Object> map) {
-        if (map == null || map.isEmpty()) {
+        if (CollectionUtils.isEmpty(map)) {
             return "";
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sBuilder = new StringBuilder();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue());
-            sb.append("&");
+            sBuilder.append(entry.getKey() + "=" + entry.getValue());
+            sBuilder.append("&");
         }
-        String s = sb.toString();
+        String s = sBuilder.toString();
         if (s.endsWith("&")) {
             s = StringUtils.substringBeforeLast(s, "&");
         }
@@ -626,15 +633,15 @@ public class WordServiceImpl implements WordService {
      * 将map转换成header
      */
     public static String getHeaderByMap(Map<String, Object> map) {
-        if (map == null || map.isEmpty()) {
+        if (CollectionUtils.isEmpty(map)) {
             return "";
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sBuilder = new StringBuilder();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            sb.append("--header '");
-            sb.append(entry.getKey() + ":" + entry.getValue());
-            sb.append("'");
+            sBuilder.append("--header '");
+            sBuilder.append(entry.getKey() + ":" + entry.getValue());
+            sBuilder.append("'");
         }
-        return sb.toString();
+        return sBuilder.toString();
     }
 }
